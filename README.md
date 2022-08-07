@@ -26,6 +26,7 @@
 ## 📃 Todo 💹
 - [ ] Add modulus/remainder operator (%)
 - [ ] Figure out issues with the test file
+- [ ] Add more functionality to the `getfenv` function.
 
 ## ⚓ Abandoned 🚧
 - Proxies (like the Javascript `new Proxy(<OBJECT>, <PROXY>))` and the Lua `setmetatable(<OBJECT>, <PROXY>)`) 
