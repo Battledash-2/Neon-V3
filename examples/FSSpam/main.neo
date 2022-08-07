@@ -1,0 +1,16 @@
+// end = 500000
+// with open("result.lua","w+") as f:
+//     f.write(f"local number = math.random(0,{end})\nprint(number)\n\n")
+//     for i in range(end + 1):
+//         f.write(f"if number == {i} then\n\tprint(\"is {'even' if i % 2 == 0 else 'odd'}\")\nend")
+
+const end = 500000;
+const fs = import 'fs';
+
+const f = fs.open('result.lua', 'w+');
+f.write('local number = math.random(0,'+end+')\nprint(number)\n\n');
+let even = true;
+for (let i = 0; i < end; i++) {
+	f.write('if number == '+i+' then\n\tprint("is '+(even ? 'even' : 'odd')+'")\nend');
+	even = !even;
+}

@@ -1,5 +1,5 @@
 # 🔆 Neon Lang 🟡
-#### V3.0.0
+#### V3.0.1
 
 # ***Neon has been updated to use Deno rather than Node.js! This means you can compile Neon to reach full potential!***
 
@@ -17,7 +17,17 @@
 1) Clone the source code (like shown above)
 2) Run `node . <MODE: [-f: File, -c: Console, Default: -c]> <MODE==FILE?FNAME: [-t: Show Exec Time]>`
 
+## 📜 Changelog 🔧
+- Updated to v3.0.1 (from v3.0.0)
+- Added `append` function to the fs module.
+- Added `\t` operator for strings.
+- Added `FSSpam` example which is a performance test.
+
 ## 📃 Todo 💹
+- [ ] Add modulus/remainder operator (%)
+- [ ] Figure out issues with the test file
+
+## ⚓ Abandoned 🚧
 - Proxies (like the Javascript `new Proxy(<OBJECT>, <PROXY>))` and the Lua `setmetatable(<OBJECT>, <PROXY>)`) 
 - ObjectPrototype.defineProperty (`<OBJECT>.defineProperty(<NAME>, <FAKE-ISH PROXY: VALUE>)`)
 

@@ -24,6 +24,7 @@ module.exports = {
 
 			read() { if (closed) throw new ReferenceError(`Cannot read closed file`); return String(fs.readFileSync(fileName)); },
 			write(contents) { if (closed) throw new ReferenceError(`Cannot write closed file`); return fs.writeSync(file, contents); },
+			append(contents) { if (closed) throw new ReferenceError(`Cannot append closed file`); return fs.appendFileSync(fileName, contents); }, 
 
 			close() { if (closed) throw new ReferenceError(`File already closed`); closed = true; return fs.closeSync(file); },
 		};
