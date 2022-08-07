@@ -1,0 +1,4 @@
+fun sayHi(to) {
+	return "Hello, " + to + "!";
+}
+print(sayHi("World"));
