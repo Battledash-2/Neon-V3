@@ -10,7 +10,7 @@ export default (Interpreter) => {
 
 
 	const glbl = {
-		VER: '3.0.1', // { constant: false, value: '1.0.0', },
+		VER: '3.0.1-env', // { constant: false, value: '1.0.0', },
 		BUILD: Deno.build, // { constant: true, value: process.platform, },
 
 		...Builtin,
@@ -44,9 +44,15 @@ export default (Interpreter) => {
 
 		// -------------
 		// - ENVIRONMENTS
-		getfenv(_e, f) { 
+		getfenv(_e, f, l=-1) { 
 			if (typeof f === 'undefined') return _e;
-			return f?.raw?.value?.env;
+			if (l < 0) return f?.raw?.value?.env;
+			if (l >= 0) {
+				let env = f?.raw?.value?.env;
+				for (let i = 0; i < l; i++) env = env?.parent;
+				return env;
+			}
+			throw new Error('getfenv: invalid arguments');
 		},
 		setfenv(_e, f, o) {
 			if (typeof o === 'undefined') return _e = new Environment(f?.record, _e);
@@ -66,7 +72,7 @@ export default (Interpreter) => {
 			while (env?.parent != null) {
 				env = env.parent;
 			}
-			if (varn == null || varv == null) throw new Error(`Missing argument in 'global'`);
+			if (varn == null || varv == null) throw new Error('global: invalid arguments');
 			env.assign(varn, varv);
 			return varv;
 		},

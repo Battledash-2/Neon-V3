@@ -1,5 +1,5 @@
 # 🔆 Neon Lang 🟡
-#### V3.0.1
+#### v3.0.1-env
 
 # ***Neon has been updated to use Deno rather than Node.js! This means you can compile Neon to reach full potential!***
 
@@ -18,21 +18,25 @@
 2) Run `node . <MODE: [-f: File, -c: Console, Default: -c]> <MODE==FILE?FNAME: [-t: Show Exec Time]>`
 
 ## 📜 Changelog 🔧
+#### v3.0.1-env
+- Added more functionality to the `getfenv` function
+#### v3.0.1
 - Updated to v3.0.1 (from v3.0.0)
 - Added `append` function to the fs module.
 - Added `\t` operator for strings.
 - Added `FSSpam` example which is a performance test.
 
-## 📃 Todo 💹
-- [ ] Add modulus/remainder operator (%)
-- [ ] Figure out issues with the test file
-- [ ] Add more functionality to the `getfenv` function.
 
 ## ⚓ Abandoned 🚧
 - Proxies (like the Javascript `new Proxy(<OBJECT>, <PROXY>))` and the Lua `setmetatable(<OBJECT>, <PROXY>)`) 
 - ObjectPrototype.defineProperty (`<OBJECT>.defineProperty(<NAME>, <FAKE-ISH PROXY: VALUE>)`)
 
+## 📃 Todo 💹
+- [ ] Add modulus/remainder operator (%)
+- [ ] Figure out issues with the tests
+
 ## 🏁 Finished 🔚
+- [x] Add more functionality to the `getfenv` function.
 - [x] ***UPDATED TO DENO!***
 - [x] OOP support (still missing `extends` keyword) (Classes)
 - [x] (...initial) (objects, array, negated sets, if statements, for/while, variables, scopes)

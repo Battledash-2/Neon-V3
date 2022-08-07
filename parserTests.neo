@@ -2,7 +2,7 @@ let num = 69; // funny moment?
 fun par(hi) {
 	fun en() {
 		print(num); // 420
-		print(getfenv(par).num); // 69
+		print(getfenv(en, 1).num); // 69
 	}
 	setfenv(en, {
 		num: 420 // funny moment?
