@@ -1,0 +1,753 @@
+import StringHandle from './core/escapes.js';
+
+export default class Parser {
+	constructor(tokens, filename='runtime') {
+		this.tokens = tokens;
+		this.next = this.tokens.nextToken();
+
+		this.filename = filename;
+
+		return this.program();
+	}
+
+	stringStatement() {
+		let s = this.next;
+		s = {
+			type: 'STRING',
+			value: StringHandle(s.value.slice(1, -1)),
+			position: s.position,
+		};
+		this.advance('STRING');
+		if (this.next?.type === 'OBJ_SEPERATOR') {
+			return this.linked(s);
+		}
+		return s;
+	}
+
+	numberStatement() {
+		let r = this.next;
+		r.value = Number(r?.value);
+		this.advance('NUMBER');
+		if (this.next?.type === 'OBJ_SEPERATOR') {
+			return this.linked(r);
+		}
+		return r;
+	}
+
+	unary() {
+		let op, num;
+
+		if (this.next?.type === 'OPERATOR' && this.tokens.isAdditive(this.next.value)) {
+			op = this.next;
+			this.advance('OPERATOR');
+			num = this.primaryStatement();
+		}
+
+		if (op != null) return {
+			type: 'UNARY',
+			operator: op.value,
+			value: num,
+			position: op?.position,
+		}
+
+		return this.primaryStatement();
+	}
+
+	logNoteq() {
+		return this._logical('unary', '!=');
+	}
+	logMEq() {
+		return this._logical('logNoteq', '>=');
+	}
+	logM() {
+		return this._logical('logMEq', '>');
+	}
+	logLEq() {
+		return this._logical('logM', '<=');
+	}
+	logL() {
+		return this._logical('logLEq', '<');
+	}
+	logEqeq() {
+		return this._logical('logL', '==');
+	}
+	logAnd() {
+		return this._logical('logEqeq', '&&');
+	}
+	logOr() {
+		return this._logical('logAnd', '||');
+	}
+	_logical(next, type) {
+		let left = this[next]();
+
+		while (this.next?.type === 'CONDITION_OPERATOR' && this.next?.value === type) {
+			let operator = this.next.value;
+			this.advance('CONDITION_OPERATOR');
+			let right = this[next]();
+
+			left = {
+				type: 'LOGICAL',
+				operator,
+				left,
+				right,
+				position: left?.position,
+			}
+		}
+
+		return left;
+	}
+
+	logicalExpression() {
+		return this.logOr();
+	}
+
+	variableExpression() {
+		if (this.next?.type !== 'DEFINE') return this.logical();
+		
+		let kind = this.next.value;
+		this.advance('DEFINE');
+		let name = this.next;
+		this.advance('IDENTIFIER');
+		
+		if (this.next?.type === 'ASSIGNMENT') {
+			this.advance('ASSIGNMENT');
+			let value = this.statement();
+
+			return {
+				type: 'DEFINE',
+				name,
+				value,
+				kind,
+				position: name?.position,
+			}
+		}
+		return name;
+	}
+
+	exponentExpression() {
+		return this.binaryExpression('variableExpression', 'isPower');
+	}
+
+	multiplicationExpression() {
+		return this.binaryExpression('exponentExpression', 'isMultiplicative');
+	}
+	
+	additionExpression() {
+		return this.binaryExpression();
+	}
+
+	binaryExpression(par='multiplicationExpression', test='isAdditive') {
+		let left = this[par]();
+
+		while (this.next?.type === 'OPERATOR' && this.tokens[test](this.next.value)) {
+			let op = this.next.value;
+			this.advance('OPERATOR');
+			let right = this[par]();
+
+			left = {
+				type: 'BINARY',
+				operator: op,
+				left,
+				right,
+				position: left?.position,
+			}
+		}
+
+		return left;
+	}
+
+	blockStatement() {
+		let body;
+		if (this.next?.type === 'LBLOCK') {
+			this.advance('LBLOCK', '{');
+			body = this.statementList('RBLOCK');
+			this.advance('RBLOCK', '}');
+		} else {
+			body = this.statement();
+		}
+
+		return {
+			type: 'BLOCK',
+			body,
+			position: body?.position,
+		}
+	}
+
+	parenthesizedExpression() {
+		this.advance('LPAREN', '(');
+		const body = this.statement();
+		this.advance('RPAREN', ')');
+
+		switch (this.next?.type) {
+			case 'LPAREN':
+				return this.functionCall(body);
+			case 'OBJ_SEPERATOR':
+				return this.linked(body);
+			case 'LBRACK':
+				return this.arraySelect(body);
+		}
+
+		return body;
+	}
+
+	argumentList(stopAt='RPAREN') {
+		let args = [];
+		if (this.next?.type !== stopAt) {
+			do {
+				if (this.next?.type === stopAt) break;
+				args.push(this.statement());
+			} while (this.next?.type === 'SEPERATOR' && this.advance('SEPERATOR'));
+		}
+		return args;
+	}
+
+	functionCall(name) {
+		this.advance('LPAREN', '(');
+		const args = this.argumentList('RPAREN');
+		this.advance('RPAREN', ')');
+
+		name = {
+			type: 'FUNCTION_CALL',
+			name,
+			arguments: args,
+			position: name?.position,
+		};
+
+		if (this.next?.type === 'LPAREN') {
+			return this.functionCall(name);
+		} else if (this.next?.type === 'OBJ_SEPERATOR') {
+			return this.linked(name);
+		} else if (this.next?.type === 'LBRACK') {
+			return this.arraySelect(name);
+		}
+
+		return name;
+	}
+
+	assignment(name) {
+		let operator = this.next.value;
+		this.advance('ASSIGNMENT');
+		let value = this.statement();
+
+		return {
+			type: 'ASSIGN',
+			operator,
+			name,
+			value,
+			position: name?.position,
+		};
+	}
+
+	linked(w,a) {
+		this.advance('OBJ_SEPERATOR', '.');
+		let other = this.identifier(a);
+		
+		return {
+			type: 'LINKED',
+			with: w,
+			other,
+			position: w?.position,
+		}
+	}
+
+	assignmentSyntax(name) {
+		let operator = this.next.value;
+		this.advance('ASSIGNMENT_SS');
+
+		return {
+			type: 'SS_ASSIGN',
+			operator,
+			variable: name,
+			position: name?.position,
+		}
+	}
+
+	ternary(on) {
+		// on = statement
+		this.advance('QSMARK');
+		let success = this.statement();
+		this.advance('OBJ_SET');
+		let fail = this.statement();
+
+		return {
+			type: 'TERNARY',
+			condition: on,
+			success,
+			fail,
+			position: on.position,
+		};
+	}
+
+	identifier(allowFunc=true) {
+		let identifier = this.next;
+		this.advance('IDENTIFIER');
+		
+		switch (this.next?.type) {
+			case 'OBJ_SEPERATOR':
+				return this.linked(identifier, allowFunc);
+			case 'LBRACK':
+				return this.arraySelect(identifier);
+			case 'ASSIGNMENT_SS':
+				return this.assignmentSyntax(identifier);
+		}
+
+		if (this.next?.type === 'LPAREN' && allowFunc) return this.functionCall(identifier);
+		if (this.next?.type === 'ASSIGNMENT' && allowFunc) return this.assignment(identifier);
+
+		return identifier;
+	}
+
+	classInstance() {
+		const position = this.next?.position;
+		this.advance('C_CREATE', 'new');
+
+		const name = this.identifier(false);
+
+		this.advance('LPAREN', '(');
+		const args = this.argumentList('RPAREN');
+		this.advance('RPAREN', ')');
+
+		let rv = {
+			type: 'CLASS_INSTANCE',
+			name,
+			arguments: args,
+			position,
+		};
+
+		if (this.next?.type === 'OBJ_SEPERATOR') {
+			return this.linked(rv);
+		}
+
+		return rv;
+	}
+
+	classDefinition() {
+		// Get function name
+		let pos = this.advance('C_DEFINE');
+		let name = this.next;
+		this.advance();
+
+		// Get the arguments
+		if (name?.type !== 'LPAREN') {
+			this.advance('LPAREN');
+		} else {
+			name = null;
+		}
+		let argNames = this.argumentList('RPAREN');
+		this.advance('RPAREN');
+
+		// Get the function body
+		const body = this.blockStatement();
+
+		return {
+			type: 'CLASS_DEFINITION',
+			name,
+			arguments: argNames,
+			body,
+			position: pos?.position,
+		};
+	}
+
+	functionDefinition() {
+		// Get function name
+		let pos = this.advance('F_DEFINE');
+		let name = this.next;
+		this.advance();
+
+		// Get the arguments
+		if (name?.type !== 'LPAREN') {
+			this.advance('LPAREN');
+		} else {
+			name = null;
+		}
+		let argNames = this.argumentList('RPAREN');
+		this.advance('RPAREN');
+
+		// Get the function body
+		const body = this.blockStatement();
+
+		return {
+			type: 'FUNCTION_DEFINITION',
+			name,
+			arguments: argNames,
+			body,
+			position: pos?.position,
+		};
+	}
+
+	objectStatement() {
+		this.advance('LBLOCK');
+		
+		let obj = {};
+
+		// hello: hey
+		do {
+			if (this.next?.type === 'RBLOCK') break;
+			let name = this.next;
+			
+			if (this.next?.type !== 'IDENTIFIER' && this.next?.type !== 'STRING') throw new TypeError(`Value type is expected to be a string or identifier (${this.filename}:${this.next.position.line}:${this.next.position.cursor})`);
+			if (this.next?.type === 'STRING') name.value = StringHandle(name.value.slice(1, -1));
+
+			this.advance();
+			this.advance('OBJ_SET');
+
+			let value = this.statement();
+
+			obj[name?.value] = value;
+		} while (this.next?.type === 'SEPERATOR' && this.advance('SEPERATOR', ',')); // OBJ_SEPERATOR && OBJ_SET
+
+		this.advance('RBLOCK');
+		return {
+			type: 'OBJECT',
+			values: obj,
+			position: obj?.position,
+		}
+	}
+	
+	arraySelect(a) {
+		if (this.next?.type !== 'LBRACK') return a;
+		this.advance('LBRACK');
+		let select = this.statement();
+		this.advance('RBRACK');
+
+		let r = {
+			type: 'ARRAY_SELECT',
+			array: a,
+			select,
+			position: a?.position,
+		};
+
+		if (this.next?.type === 'LBRACK') {
+			return this.arraySelect(r);
+		}
+
+		if (this.next?.type === 'ASSIGNMENT') {
+			return this.assignment(r);
+		}
+
+		return r;
+	}
+
+	arrayStatement() {
+		this.advance('LBRACK');
+		let arr = this.argumentList('RBRACK');
+		this.advance('RBRACK');
+
+		return this.arraySelect({
+			type: 'ARRAY',
+			values: arr,
+			position: arr?.position,
+		});
+	}
+
+	logical() {
+		return this.logicalExpression();
+	}
+
+	condition() {
+		this.advance('LPAREN');
+		let statement = this.logical();
+		this.advance('RPAREN');
+
+		let pass = this.blockStatement();
+		let fail;
+
+		if (this.next?.type === 'CONDITIONAL_ELSE') {
+			this.advance('CONDITIONAL_ELSE');
+			fail = this.blockStatement();
+		}
+
+		return {
+			type: 'CONDITION',
+			statement,
+			pass,
+			fail,
+			position: statement?.position,
+		};
+	}
+
+	conditionalStatement() {
+		this.advance('CONDITIONAL');
+		const condition = this.condition();
+		return condition;
+	}
+
+	loopStatement() {
+		let pos = this.advance('LOOP');
+		this.advance('LPAREN');
+
+		let definitions = [];
+		let condition;
+		let execute = [];
+
+		while (this.next != null && this.next.type != 'RPAREN') {
+			let stmt = this.statement();
+			// res.push(stmt);
+			switch (stmt?.type) {
+				case 'DEFINE':
+					definitions.push(stmt);
+					break;
+				case 'CONDITION':
+					if (condition) {execute.push(stmt); break;}
+					condition.push(stmt);
+					break;
+				default:
+					execute.push(stmt);
+			}
+			if (this.next?.type === 'EXPR_END') this.advance('EXPR_END', ';');
+		}
+
+		this.advance('RPAREN');
+
+		let pass = this.blockStatement();
+
+		return {
+			type: 'R_LOOP',
+			definitions,
+			condition,
+			execute,
+			pass,
+			position: pos?.position,
+		};
+	}
+
+	importStatement() {
+		const pos = this.next.position;
+		this.advance('IMPORT', 'import');
+		const file = this.stringStatement();
+
+		return {
+			type: 'IMPORT',
+			file,
+			position: pos,
+		}
+	}
+
+	exportStatement() {
+		let pos = this.next.position;
+		this.advance('EXPORT');
+		let value = this.primaryStatement();
+
+		return {
+			type: 'EXPORT',
+			value,
+			position: pos,
+		}
+	}
+
+	returnStatement() {
+		let pos = this.next.position;
+		this.advance('RETURN', 'return');
+		let vtr = this.statement();
+
+		return {
+			type: 'RETURN',
+			value: vtr,
+			position: pos,
+		};
+	}
+	
+	switchStatement() {
+		const position = this.next.position;
+		this.advance('CONDITIONAL_SWITCH', 'switch');
+		
+		this.advance('LPAREN', '(');
+		let execOn = this.statement();
+		this.advance('RPAREN', ')');
+
+		let tests = [];
+		let defaultExec = null;
+
+		this.advance('LBLOCK', '{');
+		if (this.next?.type === 'RBLOCK') throw new SyntaxError(`Unexpected token '}': Expected a 'case' (${this.filename}:${position.line}:${position.cursor})`);
+		
+		while (this.next?.type !== 'RBLOCK') {
+			if (this.next == null || this.next?.type !== 'CONDITIONAL_CASE') throw new SyntaxError(`Expected 'case' or 'default' (${this.filename}:${position.line}:${position.cursor})`);
+			if (this.next?.value === 'default') {
+				if (defaultExec !== null) throw new SyntaxError(`Saw multiple 'default' statements inside of switch case (${this.filename}:${position.line}:${position.cursor})`);
+				this.advance('CONDITIONAL_CASE', 'default');
+				this.advance('OBJ_SET', ':');
+				let res = [];
+				while (this.next !== null && (this.next.type !== 'CONDITIONAL_CASE' && this.next.type !== 'RBLOCK')) {
+					res.push(this.statement());
+					if (this.next?.type === 'EXPR_END') this.advance('EXPR_END', ';');
+				}
+				defaultExec = res;
+				continue;
+			}
+			this.advance('CONDITIONAL_CASE', 'case');
+			let test = this.primaryStatement();
+			this.advance('OBJ_SET', ':');
+			let res = [];
+			while (this.next !== null && (this.next.type !== 'CONDITIONAL_CASE' && this.next.type !== 'RBLOCK')) {
+				res.push(this.statement());
+				if (this.next?.type === 'EXPR_END') this.advance('EXPR_END', ';');
+			}
+			tests.push({
+				condition: test,
+				body: { type: 'BLOCK', body: res },
+			});
+		}
+		
+		this.advance('RBLOCK', '}');
+
+		return {
+			type: 'SWITCH_STATEMENT',
+			handler: execOn,
+			statements: tests,
+			default: { type: 'BLOCK', body: defaultExec },
+			position,
+		};
+	}
+
+	tryCatchStatement() {
+		const position = this.next.position;
+		this.advance('TRY', 'try');
+		const body = this.blockStatement();
+		this.advance('CATCH', 'catch');
+		this.advance('LPAREN', '(');
+		const id = this.identifier(false);
+		this.advance('RPAREN', ')');
+		const errorBody = this.blockStatement();
+
+		return {
+			type: 'TRY_CATCH',
+			block: body,
+			onerror: {
+				id,
+				body: errorBody,
+			},
+			position,
+		};
+	}
+
+	withStatement() {
+		const position = this.next.position;
+		this.advance('WITH', 'with');
+		
+		this.advance('LPAREN', '(');
+		const env = this.identifier();
+		this.advance('RPAREN', ')');
+
+		const block = this.blockStatement();
+
+		return {
+			type: 'WITH_STATEMENT',
+			env,
+			block,
+			position,
+		};
+	}
+
+	errorStatement() {
+		let position = this.next.position;
+		this.advance('THROW_ERR', 'throw');
+		let message = this.statement();
+		return {
+			type: 'THROW_ERROR',
+			message,
+			position,
+		};
+	}
+
+	typeofStatement() {
+		let position = this.next.position;
+		this.advance('TYPEOF', 'typeof');
+		let object = this.statement();
+		return {
+			type: 'TYPEOF_OBJ',
+			object,
+			position,
+		};
+	}
+
+	primaryStatement() {
+		switch (this.next?.type) {
+			case 'EXPR_END':
+				this.advance('EXPR_END');
+				return { type: 'EMPTY' };
+			case 'NUMBER':
+				return this.numberStatement();
+			case 'STRING':
+				return this.stringStatement();
+			case 'LBLOCK':
+				return this.objectStatement();
+			case 'LPAREN':
+				return this.parenthesizedExpression();
+			case 'OPERATOR':
+				return this.unary();
+			case 'IDENTIFIER':
+				return this.identifier();
+			case 'F_DEFINE':
+				return this.functionDefinition();
+			case 'C_DEFINE':
+				return this.classDefinition();
+			case 'C_CREATE':
+				return this.classInstance();
+			case 'LBRACK':
+				return this.arrayStatement();
+			case 'CONDITIONAL':
+				return this.conditionalStatement();
+			case 'LOOP':
+				return this.loopStatement();
+			case 'IMPORT':
+				return this.importStatement();
+			case 'EXPORT':
+				return this.exportStatement();
+			case 'RETURN':
+				return this.returnStatement();
+			case 'CONDITIONAL_SWITCH':
+				return this.switchStatement();
+			case 'TRY':
+				return this.tryCatchStatement();
+			case 'WITH':
+				return this.withStatement();
+			case 'THROW_ERR':
+				return this.errorStatement();
+			case 'TYPEOF':
+				return this.typeofStatement();
+			default:
+				const r = this.next;
+				this.advance();
+				return r;
+		}
+	}
+
+	statement() {
+		const stmt = this.additionExpression();
+		// console.log(this.next);
+		if (this.next?.type === 'QSMARK') {
+			return this.ternary(stmt);
+		}
+		return stmt;
+	}
+
+	statementList(endOn) {
+		let res = [];
+
+		while (this.next != null && this.next.type != endOn) {
+			res.push(this.statement());
+			if (this.next?.type === 'EXPR_END') this.advance('EXPR_END', ';');
+		}
+
+		return res;
+	}
+
+	program() {
+		return {
+			type: 'PROGRAM',
+			body: this.statementList()
+		};
+	}
+
+	advance(type, lk) {
+		lk = lk ?? type;
+		if (type != null) {
+			if (this.next == null) throw new SyntaxError(`Input abruptly ended while expecting '${lk}' (${this.filename}:EOF)`);
+			if (this.next.type !== type) throw new SyntaxError(`Unexpected token '${this.next.value}': Expected '${lk}' (${this.filename}:${this.next.position.line}:${this.next.position.cursor})`);
+		}
+
+		this.next = this.tokens.nextToken();
+		return this.next;
+	}
+}

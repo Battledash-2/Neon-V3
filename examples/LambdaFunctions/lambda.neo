@@ -1,0 +1,6 @@
+fun callback(cb) {
+	cb('poop');
+}
+
+print(callback(fun (arg) {arg+'hey'}));
+callback(print);

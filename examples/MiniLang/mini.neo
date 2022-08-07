@@ -1,0 +1,51 @@
+let str = ".43 dup * .";
+
+fun run(lexed) {
+	let stack = [];
+
+	fun pop() {
+		let v = stack.lastValue;
+		stack.pop();
+		v;
+	}
+
+	fun push(v) {
+		stack.push(v);
+	}
+
+	while (let i = 0; i<lexed.length; i++) {
+		let current = lexed[i];
+		if (isNaN(current.number) == false) {
+			// is number
+			push(current.number);
+		} else if (current == '+') {
+			let a = pop();
+			let b = pop();
+			push(b + a);
+		} else if (current == '-') {
+			let a = pop();
+			let b = pop();
+			push(b - a);
+		} else if (current == '*') {
+			let a = pop();
+			let b = pop();
+			push(b * a);
+		} else if (current == '/') {
+			let a = pop();
+			let b = pop();
+			push(b / a);
+		} else if (current == '.') {
+			print(pop());
+		} else if (current == 'dup') {
+			let a = pop();
+			push(a);
+			push(a);
+		} else if (current == 'drop') {
+			pop();
+		}
+	}
+
+	stack; // return 'stack'
+}
+
+run(str.match('[^\s]+'));

@@ -1,0 +1,2 @@
+const gibdu = 'bar';
+export gibdu;
