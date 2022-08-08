@@ -15,7 +15,7 @@
 
 ### Alternatively:
 1) Clone the source code (like shown above)
-2) Run `node . <MODE: [-f: File, -c: Console, Default: -c]> <MODE==FILE?FNAME: [-t: Show Exec Time]>`
+2) Execute `deno run -A run.js [file you want to run]`
 
 ## 📜 Changelog 🔧
 #### v3.0.1-mod
@@ -34,10 +34,11 @@
 - ObjectPrototype.defineProperty (`<OBJECT>.defineProperty(<NAME>, <FAKE-ISH PROXY: VALUE>)`)
 
 ## 📃 Todo 💹
-- [ ] Add modulus/remainder operator (%)
+- [ ] Complete the REPL for the Deno version.
 - [ ] Figure out issues with the tests
 
 ## 🏁 Finished 🔚
+- [x] Add modulus/remainder operator (`%`)
 - [x] Add more functionality to the `getfenv` function.
 - [x] ***UPDATED TO DENO!***
 - [x] OOP support (still missing `extends` keyword) (Classes)
