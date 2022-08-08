@@ -9,7 +9,7 @@ const spec = [
 	[/^(==|<=|>=|<|>|!=|\|\||&&)/, "CONDITION_OPERATOR"],
 	[/^(\+\+|\-\-)/, "ASSIGNMENT_SS"],
 	[/^(\+=|\-=|\*=|=)/, "ASSIGNMENT"],
-	[/^[\+\-\*\/\^\!]/, "OPERATOR"],
+	[/^[\+\-\*\/\^\!\%]/, "OPERATOR"],
 
 	[/^\(/, 'LPAREN'],
 	[/^\)/, 'RPAREN'],
@@ -97,7 +97,7 @@ export default class Lexer {
 		return tok === '+' || tok === '-' || tok === '!';
 	}
 	isMultiplicative(tok) {
-		return tok === '*' || tok === '/';
+		return tok === '*' || tok === '/' || tok === '%';
 	}
 	isPower(tok) {
 		return tok === '^';

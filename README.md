@@ -1,5 +1,5 @@
 # 🔆 Neon Lang 🟡
-#### v3.0.1-env
+#### v3.0.1-mod
 
 # ***Neon has been updated to use Deno rather than Node.js! This means you can compile Neon to reach full potential!***
 
@@ -18,6 +18,8 @@
 2) Run `node . <MODE: [-f: File, -c: Console, Default: -c]> <MODE==FILE?FNAME: [-t: Show Exec Time]>`
 
 ## 📜 Changelog 🔧
+#### v3.0.1-mod
+- Added modulus (`%`) operator. 
 #### v3.0.1-env
 - Added more functionality to the `getfenv` function
 #### v3.0.1

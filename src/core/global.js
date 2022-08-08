@@ -10,7 +10,7 @@ export default (Interpreter) => {
 
 
 	const glbl = {
-		VER: '3.0.1-env', // { constant: false, value: '1.0.0', },
+		VER: '3.0.1-mod', // { constant: false, value: '1.0.0', },
 		BUILD: Deno.build, // { constant: true, value: process.platform, },
 
 		...Builtin,
