@@ -26,4 +26,4 @@ exp.Boolean = class {
 	}
 }
 
-export default exp;
+module.exports = exp;

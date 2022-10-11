@@ -21,4 +21,4 @@ exp.Object = {
 	},
 };
 
-export default exp;
+module.exports = exp;

@@ -1,7 +1,7 @@
 # 🔆 Neon Lang 🟡
 #### v3.0.1-mod
 
-# ***Neon has been updated to use Deno rather than Node.js! This means you can compile Neon to reach full potential!***
+# ***Deno update has been reverted. Deno was not working out an is generally slower.***
 
 ## What is Neon? (ℹ)
 ### Neon is a public and open source language (under the MIT license ©).
@@ -15,7 +15,7 @@
 
 ### Alternatively:
 1) Clone the source code (like shown above)
-2) Execute `deno run -A run.js [file you want to run]`
+2) Execute `node run.js [file you want to run]`
 
 ## 📜 Changelog 🔧
 #### v3.0.1-mod
@@ -40,7 +40,7 @@
 ## 🏁 Finished 🔚
 - [x] Add modulus/remainder operator (`%`)
 - [x] Add more functionality to the `getfenv` function.
-- [x] ***UPDATED TO DENO!***
+- [x] ***(REVERTED)*** UPDATED TO DENO!
 - [x] OOP support (still missing `extends` keyword) (Classes)
 - [x] (...initial) (objects, array, negated sets, if statements, for/while, variables, scopes)
 

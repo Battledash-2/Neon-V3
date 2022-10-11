@@ -78,7 +78,7 @@ const spec = [
 	[/^;/, "EXPR_END"],
 ];
 
-export default class Lexer {
+module.exports = class Lexer {
 	constructor(source, filename='runtime') {
 		this.source = source;
 		this.cursor = 0;

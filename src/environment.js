@@ -1,4 +1,4 @@
-export default class Environment {
+module.exports = class Environment {
 	constructor(env = {}, par = null, con = {}, locked = false) {
 		this.record = env;
 		this.parent = par;

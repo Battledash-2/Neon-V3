@@ -1,6 +1,6 @@
-import StringHandle from './core/escapes.js';
+const StringHandle = require('./core/escapes');
 
-export default class Parser {
+module.exports = class Parser {
 	constructor(tokens, filename='runtime') {
 		this.tokens = tokens;
 		this.next = this.tokens.nextToken();

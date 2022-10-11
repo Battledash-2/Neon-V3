@@ -1,17 +1,17 @@
-import Lexer from "../lexer.js";
-import Parser from "../parser.js";
+const Lexer = require('../lexer.js');
+const Parser = require('../parser.js');
 
-import Environment from "../environment.js";
-import LiteralConstructors from "./literal_constructors.js";
-import Builtin from "./builtin.js";
+const Environment = require('../environment.js');
+const LiteralConstructors = require('./literal_constructors.js');
+const Builtin = require('./builtin.js');
 
-export default (Interpreter) => {
+module.exports = (Interpreter) => {
 	let exp = {};
 
 
 	const glbl = {
 		VER: '3.0.1-mod', // { constant: false, value: '1.0.0', },
-		BUILD: Deno.build, // { constant: true, value: process.platform, },
+		PLATFORM: process.platform, // { constant: true, value: process.platform, },
 
 		...Builtin,
 		...LiteralConstructors,

@@ -1,4 +1,4 @@
-export default {
+module.exports = {
 	String(THIS, env) {
 		return {
 			value: THIS,

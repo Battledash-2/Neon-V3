@@ -1,17 +1,15 @@
-import { existsSync } from "https://deno.land/std@0.151.0/fs/exists.ts";
-import { createRequire } from "https://deno.land/std@0.151.0/node/module.ts";
-const require = createRequire(import.meta.url);
+// import { existsSync } from "https://deno.land/std@0.151.0/fs/exists.ts";
+const fs = require("fs");
+const path = require("path");
 
-import * as path from "https://deno.land/std@0.151.0/path/mod.ts";
-const __dirname = path.dirname(path.fromFileUrl(import.meta.url));
+// import Lexer from "./lexer.js";
+const Lexer = require("./lexer.js");
+const Parser = require("./parser.js");
 
-import Lexer from "./lexer.js";
-import Parser from "./parser.js";
+const Environment = require("./environment.js");
+const Constructors = require("./core/constructors.js");
 
-import Environment from "./environment.js"
-import Constructors from "./core/constructors.js";
-
-import Global from "./core/global.js";
+const Global = require('./core/global.js');
 
 class Internal {
 	constructor(type, value) {
@@ -260,16 +258,16 @@ class Interpreter {
 
 			let fcontent;
 
-			if (file.endsWith('.js') && existsSync(path.join(Deno.cwd(), file))) {
-				const renv = require(path.join(Deno.cwd(), file));
+			if (file.endsWith('.js') && fs.existsSync(path.join(process.cwd(), file))) {
+				const renv = require(path.join(process.cwd(), file));
 				return renv;
-			} else if (existsSync(path.join(Deno.cwd(), file))) {
-				fcontent = Deno.readTextFileSync(path.join(Deno.cwd(), file));
-			} else if (existsSync(path.join(__dirname, 'core', 'modules', ...jsf))) {
+			} else if (fs.existsSync(path.join(process.cwd(), file))) {
+				fcontent = fs.readFileSync(path.join(process.cwd(), file));
+			} else if (fs.existsSync(path.join(__dirname, 'core', 'modules', ...jsf))) {
 				const renv = require(path.join(__dirname, 'core', 'modules', ...jsf));
 				return renv;
-			} else if (existsSync(path.join(Deno.cwd(), '.modules', file))) {
-				fcontent = Deno.readTextFileSync(path.join(Deno.cwd(), '.modules', file));
+			} else if (fs.existsSync(path.join(process.cwd(), '.modules', file))) {
+				fcontent = fs.readFileSync(path.join(process.cwd(), '.modules', file));
 			} else {
 				throw new ReferenceError(`Attempt to import file '${file}' which does not exist`);
 			}
@@ -620,4 +618,4 @@ class Interpreter {
 const ENVConstruct = Global(Interpreter);
 const GlobalEnvironment = ENVConstruct.default;
 
-export default Interpreter;
+module.exports = Interpreter;

@@ -1,20 +1,17 @@
-import { assertStrictEquals } from "https://deno.land/std@0.151.0/testing/asserts.ts";
+const assert = require('assert');
 
-import { createRequire } from "https://deno.land/std@0.151.0/node/module.ts";
-const require = createRequire(import.meta.url);
 
-import Interpreter from '../src/interpreter.js';
-import Lexer from '../src/lexer.js';
-import Parser from '../src/parser.js';
+const Interpreter = require('../src/interpreter');
+const Lexer = require('../src/lexer');
+const Parser = require('../src/parser');
 
-import Global from '../src/core/global.js';
-const env = Global(Interpreter);
+const env = require('../src/core/global')(Interpreter);
 
 const interpreter = new Interpreter();
 
 function test(code, expec) {
     const ast = new Parser(new Lexer(code));
-    assertStrictEquals(interpreter.eval(ast, env.create()), expec);
+    assert.strictEqual(interpreter.eval(ast, env.create()), expec);
 }
 
 const tests = [
