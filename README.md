@@ -1,8 +1,6 @@
 # 🔆 Neon Lang 🟡
 #### v3.0.1-mod
 
-# ***Deno update has been reverted. Deno was not working out an is generally slower.***
-
 ## What is Neon? (ℹ)
 ### Neon is a public and open source language (under the MIT license ©).
 
@@ -30,12 +28,12 @@
 
 
 ## ⚓ Abandoned 🚧
+*(may come back in the future)*
 - Proxies (like the Javascript `new Proxy(<OBJECT>, <PROXY>))` and the Lua `setmetatable(<OBJECT>, <PROXY>)`) 
 - ObjectPrototype.defineProperty (`<OBJECT>.defineProperty(<NAME>, <FAKE-ISH PROXY: VALUE>)`)
 
 ## 📃 Todo 💹
-- [ ] Complete the REPL for the Deno version.
-- [ ] Figure out issues with the tests
+- [ ] Add support for pointers by v3.0.5
 
 ## 🏁 Finished 🔚
 - [x] Add modulus/remainder operator (`%`)
@@ -48,3 +46,5 @@
 - Number interpreter with a lexer and parser (`./examples/NumberInterpreter`)
 - Mini-language / small lexer & parser-less language (`./examples/MiniLang`)
 - Lambda functions (`./examples/LambdaFunctions`)
+- File system spam (`./examples/FSSpam`)
+- Example of import system (`./examples/Imports`)
