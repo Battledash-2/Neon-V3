@@ -1,0 +1,33 @@
+{
+  "name": "neon-v3",
+  "version": "3.0.1-mod",
+  "description": "Neon is a public and open source language (under the MIT license ©).",
+  "main": "run.js",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node ./run.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Battledash-2/Neon-V3.git"
+  },
+  "keywords": [
+    "javascript",
+    "programming",
+    "language",
+    "custom",
+    "parser",
+    "lexer",
+    "interpreter",
+    "jsinjs"
+  ],
+  "author": "Battledash-2",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Battledash-2/Neon-V3/issues"
+  },
+  "homepage": "https://github.com/Battledash-2/Neon-V3#readme"
+}
